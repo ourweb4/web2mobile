@@ -1,0 +1,12 @@
+final String sitename = ' ';
+final String siteUrl = 'http://ourweb.net';
+final String siteTitle = 'Ourweb.net ';
+final String siteDescription = ' ';
+final String address = ' ';
+final String phone = ' ';
+final String email = ' ';
+final String city = ' ';
+final String state = ' ';
+final String zip = ' ';
+final String country = ' ';
+final bool isOktoLeave = false;
