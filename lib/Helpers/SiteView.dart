@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:web2mobile/Config.dart';
+import 'package:web2mobile/Pages/App_page.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 // Import for Android features.
 import 'package:webview_flutter_android/webview_flutter_android.dart';
@@ -42,7 +43,13 @@ class _SiteviewState extends State<Siteview> {
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(
         NavigationDelegate(
-          onProgress: (int progress) {
+          onProgress: (int progress) 
+          {
+         
+             CircularProgressIndicator(
+              color: Colors.black,
+              
+              value: progress.toDouble());
             debugPrint('WebView is loading (progress : $progress%)');
           },
           onPageStarted: (String url) {
@@ -71,7 +78,8 @@ class _SiteviewState extends State<Siteview> {
             debugPrint('url change to ${change.url}');
           },
           onHttpAuthRequest: (HttpAuthRequest request) {
-     //       openDialog(request);
+            
+            openDialog(request, context);
           },
         ),
       )
@@ -100,7 +108,7 @@ class _SiteviewState extends State<Siteview> {
     @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title:  Text(siteTitle),
         // This drop down menu demonstrates that Flutter widgets can be shown over the web view.
@@ -124,6 +132,15 @@ class NavigationControls extends StatelessWidget {
     return Row(
       children: <Widget>[
         IconButton(
+          icon: const Icon(Icons.home_outlined,
+          color: Colors.red,
+           size: 50.0),
+          onPressed: () async {
+            await webViewController.loadRequest(Uri.parse(siteUrl));
+                    },
+        ),
+        
+        IconButton(
           icon: const Icon(Icons.arrow_back_rounded,
           color: Colors.red,
            size: 50.0),
@@ -139,6 +156,7 @@ class NavigationControls extends StatelessWidget {
             }
           },
         ),
+
         IconButton(
           icon: const Icon(Icons.arrow_forward_rounded,
           color: Colors.red,
@@ -161,7 +179,73 @@ class NavigationControls extends StatelessWidget {
            size: 50.0),
           onPressed: () => webViewController.reload(),
         ),
+        IconButton(
+          icon: const Icon(Icons.info_rounded,
+          color: Colors.red,
+           size: 50.0),
+          onPressed: () {
+             Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) =>  AppPage()));
+          },
+        ),
       ],
     );
   }
 }
+  Future<void> openDialog(HttpAuthRequest httpRequest, BuildContext context) async {
+    final TextEditingController usernameTextController =
+        TextEditingController();
+    final TextEditingController passwordTextController =
+        TextEditingController();
+
+
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('${httpRequest.host}: ${httpRequest.realm ?? '-'}'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                TextField(
+                  decoration: const InputDecoration(labelText: 'Username'),
+                  autofocus: true,
+                  controller: usernameTextController,
+                ),
+                TextField(
+                  decoration: const InputDecoration(labelText: 'Password'),
+                  controller: passwordTextController,
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            // Explicitly cancel the request on iOS as the OS does not emit new
+            // requests when a previous request is pending.
+            TextButton(
+              onPressed: () {
+                httpRequest.onCancel();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                httpRequest.onProceed(
+                  WebViewCredential(
+                    user: usernameTextController.text,
+                    password: passwordTextController.text,
+                  ),
+                );
+                Navigator.of(context).pop();
+              },
+              child: const Text('Authenticate'),
+            ),
+          ],
+        );
+      },
+    );
+  }
